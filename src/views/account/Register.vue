@@ -21,7 +21,6 @@
         router.push('/accounts/login');
         })
         .catch((error) => {
-        console.log(auth)
         console.log(error.code);
         console.log(error.message);
         });

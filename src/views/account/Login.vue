@@ -20,7 +20,7 @@ async function onSubmit(values) {
     await signInWithEmailAndPassword(getAuth(), username, password);
     console.log('Login successful');
     errorMessage.value = '';
-    router.push('/'); 
+    router.push(''); 
   } catch (error) {
     console.error('Login error:', error.message);
     errorMessage.value = 'Invalid username or password. Please try again.';
