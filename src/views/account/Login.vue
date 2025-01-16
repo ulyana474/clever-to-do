@@ -85,7 +85,7 @@ async function onSubmit(values) {
   align-items: center;
   height: 100vh;
   background: linear-gradient(135deg, #cdb4db 0%, #bde0fe 100%);
-  color: white;
+  color: var(--background-color);
 }
 
 .card {
@@ -101,37 +101,38 @@ async function onSubmit(values) {
   text-align: center;
   font-weight: bold;
   font-size: 1.5rem;
-  color: #590d22;
+  color: var(--primary-color);
   margin-bottom: 1rem;
 }
 
 .alert {
   background-color: rgba(255, 0, 0, 0.1);
-  color: #ff6b6b;
+  color: var(--accent-color);
   padding: 0.75rem;
   border-radius: 5px;
   text-align: center;
   margin-bottom: 1rem;
+  font-size: small;
 }
 
 .form-control {
   background: rgba(255, 255, 255, 0.8);
   border: none;
-  color: #333;
+  color: var(--text-color);
   padding: 0.75rem;
   border-radius: 5px;
 }
 
 .form-control::placeholder {
-  color: #999;
+  color: var(--text-color);
 }
 
 .is-invalid {
-  border: 2px solid #ff6b6b;
+  border: 2px solid var(--accent-color);
 }
 
 .invalid-feedback {
-  color: #ff6b6b;
+  color: var(--accent-color);
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
@@ -139,8 +140,8 @@ async function onSubmit(values) {
 .btn {
   width: 100%;
   padding: 0.75rem;
-  background-color: #590d22;
-  color: #ddd;
+  background-color: var(--primary-color);
+  color: var(--background-color);
   font-weight: bold;
   border: none;
   border-radius: 5px;
@@ -153,7 +154,7 @@ async function onSubmit(values) {
 }
 
 .btn:disabled {
-  background-color: #ddd;
+  background-color: var(--background-color);
   cursor: not-allowed;
 }
 
@@ -162,7 +163,7 @@ async function onSubmit(values) {
   width: 1rem;
   height: 1rem;
   border: 2px solid transparent;
-  border-top: 2px solid #333;
+  border-top: 2px solid var(--text-color);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -179,7 +180,7 @@ async function onSubmit(values) {
 }
 
 .register-link a {
-  color: #590d22;
+  color: var(--primary-color);
   text-decoration: none;
   font-weight: bold;
 }
