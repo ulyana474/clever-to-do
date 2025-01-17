@@ -1,30 +1,19 @@
 <script setup>
 import { Form, Field } from 'vee-validate';
 import * as Yup from 'yup';
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { signInWithEmailAndPassword, getAuth } from 'firebase/auth';
+import { useAuthStore } from '@/stores';
 
 const schema = Yup.object().shape({
   username: Yup.string().email('Enter a valid email').required('Email is required'),
   password: Yup.string().required('Password is required'),
 });
 
-const errorMessage = ref('');
-const router = useRouter();
+const authStore = useAuthStore()
 
 async function onSubmit(values) {
   const { username, password } = values;
 
-  try {
-    await signInWithEmailAndPassword(getAuth(), username, password);
-    console.log('Login successful');
-    errorMessage.value = '';
-    router.push('');
-  } catch (error) {
-    console.error('Login error:', error.message);
-    errorMessage.value = 'Invalid username or password. Please try again.';
-  }
+  authStore.login(username, password);
 }
 </script>
 
@@ -33,7 +22,7 @@ async function onSubmit(values) {
     <div class="card">
       <h4 class="card-header">Login</h4>
       <div class="card-body">
-        <div v-if="errorMessage" class="alert">{{ errorMessage }}</div>
+        <div v-if="authStore.errorMessage" class="alert">{{ authStore.errorMessage }}</div>
 
         <Form @submit="onSubmit" :validation-schema="schema" v-slot="{ errors, isSubmitting }">
           <div class="form-group">

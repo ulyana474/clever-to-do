@@ -15,6 +15,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "dayjs": "1.11.13",
     "dotenv": "16.4.7",
     "firebase": "^11.1.0",
     "husky": "^9.1.7",

@@ -1,40 +1,79 @@
 import { defineStore } from 'pinia';
-
-import { fetchWrapper } from '@/helpers';
+import { ref, computed } from 'vue';
 import router from '@/router';
-import { useAlertStore } from '@/stores';
+import { 
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    getAuth,
+    onAuthStateChanged 
+} from 'firebase/auth';
 
-const baseUrl = `${import.meta.env.VITE_API_URL}/users`;
 
-export const useAuthStore = defineStore({
-    id: 'auth',
-    state: () => ({
-        // initialize state from local storage to enable user to stay logged in
-        user: JSON.parse(localStorage.getItem('user')),
-        returnUrl: null
-    }),
-    actions: {
-        async login(username, password) {
-            try {
-                const user = await fetchWrapper.post(`${baseUrl}/authenticate`, { username, password });    
+export const useAuthStore = defineStore('auth', () => {
 
-                // update pinia state
-                this.user = user;
+  const user = ref(JSON.parse(localStorage.getItem('user')));
+  const returnUrl = ref(null);
+  const errorMessage = ref('')
 
-                // store user details and jwt in local storage to keep user logged in between page refreshes
-                localStorage.setItem('user', JSON.stringify(user));
+  const isAuthenticated = computed(() => !!user.value);
 
-                // redirect to previous url or default to home page
-                router.push(this.returnUrl || '/');
-            } catch (error) {
-                const alertStore = useAlertStore();
-                alertStore.error(error);                
-            }
-        },
-        logout() {
-            this.user = null;
-            localStorage.removeItem('user');
-            router.push('/account/login');
+  const login = async (email, password) => {
+    try {
+        await signInWithEmailAndPassword(getAuth(), email, password);
+        console.log('Login successful');
+        errorMessage.value = '';
+        router.push('/calendar');
+      } catch (error) {
+        console.error('Login error:', error.message);
+        errorMessage.value = 'Invalid email or password. Please try again.';
+      }
+  };
+
+  const register = async (email, password) => {
+    try {
+        await createUserWithEmailAndPassword(getAuth(), email, password);
+        console.log('Successfully registered!');
+        router.push('/accounts/login');
+        errorMessage.value = '';
+    } catch (error) {
+        if (error.code == "auth/email-already-in-use") {
+            errorMessage.value = "The email address is already in use";
+        } else if (error.code == "auth/invalid-email") {
+            errorMessage.value = "The email address is not valid.";
+        } else if (error.code == "auth/operation-not-allowed") {
+            errorMessage.value = "Operation not allowed.";
+        } else if (error.code == "auth/weak-password") {
+            errorMessage.value = "The password is too weak.";
         }
     }
+  }
+
+  function getCurrentUser() {
+    return new Promise((resolve, reject) => {
+      const unsubscribe = onAuthStateChanged(getAuth(), (user) => {
+          unsubscribe()
+          resolve(user)
+        },
+        reject
+      )
+    })
+  }
+
+  const logout = () => {
+    user.value = null;
+    localStorage.removeItem('user');
+
+    router.push('/account/login');
+  };
+
+  return {
+    user,
+    returnUrl,
+    isAuthenticated,
+    errorMessage,
+    login,
+    register,
+    logout,
+    getCurrentUser
+  };
 });
