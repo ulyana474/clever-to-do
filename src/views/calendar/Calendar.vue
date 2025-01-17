@@ -1,23 +1,58 @@
-<template>
-    <div class="container">
-      <h1>Welcome to My Calendar</h1>
-      <p>This is a simple Vue component with styles applied.</p>
-    </div>
-</template>
-  
 <script setup>
+import { ref, computed } from 'vue';
+import dayjs from 'dayjs';
+
+const currentDate = ref(dayjs());
+const selectedDate = ref(null);
+
+const daysInMonth = computed(() => {
+  const startOfMonth = currentDate.value.startOf('month');
+  const days = [];
+  for (let i = 0; i < currentDate.value.daysInMonth(); i++) {
+    days.push(startOfMonth.add(i, 'day'));
+  }
+  return days;
+});
+
+const changeMonth = (direction) => {
+  currentDate.value = currentDate.value.add(direction, 'month');
+};
+
+const selectDate = (date) => {
+  selectedDate.value = date;
+};
 </script>
-  
+
+<template>
+  <div>
+    <div>
+      <button @click="changeMonth(-1)">Previous</button>
+      <h2>{{ currentDate.format('MMMM YYYY') }}</h2>
+      <button @click="changeMonth(1)">Next</button>
+    </div>
+    
+    <div class="calendar-grid">
+      <div v-for="day in daysInMonth" :key="day.format('YYYY-MM-DD')" @click="selectDate(day)">
+        {{ day.format('DD') }}
+      </div>
+    </div>
+
+    <p v-if="selectedDate">Selected Date: {{ selectedDate.format('YYYY-MM-DD') }}</p>
+  </div>
+</template>
+
 <style scoped>
-.container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--blue-background) 100%);
-    color: var(--text-color);
-    text-align: center;
-    flex-direction: column;
-    }
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  padding: 20px;
+}
+
+.calendar-grid div {
+  text-align: center;
+  cursor: pointer;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
 </style>
-  
