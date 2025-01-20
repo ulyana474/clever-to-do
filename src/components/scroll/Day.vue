@@ -1,6 +1,8 @@
 <script setup>
+import { Dayjs } from 'dayjs';
+
 defineProps({
-  value: Number,
+  value: Dayjs,
 });
 </script>
 
@@ -18,6 +20,6 @@ defineProps({
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 3rem;
+  /* font-size: 3rem; */
 }
 </style>
