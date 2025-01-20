@@ -1,58 +1,37 @@
 <script setup>
-import { ref, computed } from 'vue';
-import dayjs from 'dayjs';
+import { ref } from "vue";
+import Day from "@/components/scroll/Day.vue"
+import InfiniteScroller from "@/components/scroll/InfiniteScrollWrapper.vue";
+let items = ref([]);
+let limit = 30;
+let offset = 0;
 
-const currentDate = ref(dayjs());
-const selectedDate = ref(null);
-
-const daysInMonth = computed(() => {
-  const startOfMonth = currentDate.value.startOf('month');
-  const days = [];
-  for (let i = 0; i < currentDate.value.daysInMonth(); i++) {
-    days.push(startOfMonth.add(i, 'day'));
-  }
-  return days;
-});
-
-const changeMonth = (direction) => {
-  currentDate.value = currentDate.value.add(direction, 'month');
+const loadItems = async () => {
+  const newItems = await generateData(limit, offset);
+  items.value = [...items.value, ...newItems];
+  ++offset;
 };
-
-const selectDate = (date) => {
-  selectedDate.value = date;
+const generateData = (limit, offset) => {
+  return new Promise((resolve) => {
+    const newData = Array(limit)
+      .fill(0)
+      .map((_, index) => index + offset * limit + 1);
+    setTimeout(resolve, 0, newData);
+  });
 };
 </script>
 
 <template>
-  <div>
-    <div>
-      <button @click="changeMonth(-1)">Previous</button>
-      <h2>{{ currentDate.format('MMMM YYYY') }}</h2>
-      <button @click="changeMonth(1)">Next</button>
-    </div>
-    
-    <div class="calendar-grid">
-      <div v-for="day in daysInMonth" :key="day.format('YYYY-MM-DD')" @click="selectDate(day)">
-        {{ day.format('DD') }}
-      </div>
-    </div>
-
-    <p v-if="selectedDate">Selected Date: {{ selectedDate.format('YYYY-MM-DD') }}</p>
-  </div>
+  <InfiniteScroller class="cards" @infinite="loadItems">
+    <Day v-for="item in items" :value="item" :key="item"></Day>
+  </InfiniteScroller>
 </template>
 
 <style scoped>
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 10px;
-  padding: 20px;
-}
-
-.calendar-grid div {
-  text-align: center;
-  cursor: pointer;
-  padding: 10px;
-  border: 1px solid #ccc;
-}
+.cards {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  padding: 1rem;
+  }
 </style>
