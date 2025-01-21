@@ -10,3 +10,7 @@ import { Nav } from '@/components';
         </div>
     </div>
 </template>
+
+<style>
+@import '@/assets/base.css';
+</style>

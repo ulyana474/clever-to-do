@@ -8,21 +8,6 @@ const currentDate = ref(dayjs());
 let items = ref([]);
 const selectedDate = ref(null);
 
-const generateDaysInMonth = () => {
-  const startOfMonth = currentDate.value.startOf('month');
-  const days = [];
-  for (let i = 0; i < currentDate.value.daysInMonth(); i++) {
-    days.push(startOfMonth.add(i, 'day'));
-  }
-  return days;
-};
-
-const loadItems = () => {
-  const newItems = generateDaysInMonth(currentDate.value);
-  items.value = [...items.value, ...newItems];
-  currentDate.value = currentDate.value.add(1, 'month');
-};
-
 const formattedItems = computed(() => {
   return items.value.map(item => {
     return {
@@ -34,20 +19,47 @@ const formattedItems = computed(() => {
   });
 });
 
+const currentMonthYear = computed(() => {
+  return `${currentDate.value.subtract(1, 'month').format('MMMM')} ${currentDate.value.year()}`;
+});
+
+const generateDaysInMonth = () => {
+  const startOfMonth = currentDate.value.startOf('month');
+  const days = [];
+  for (let i = 0; i < currentDate.value.daysInMonth(); i++) {
+    days.push(startOfMonth.add(i, 'day'));
+  }
+  return days;
+};
+
+const loadNextMonth = () => {
+  const newItems = generateDaysInMonth(currentDate.value);
+  items.value = [...items.value, ...newItems];
+  currentDate.value = currentDate.value.add(1, 'month');
+};
+
+const loadPreviousMonth = () => {
+  const previousMonthDate = currentDate.value.subtract(1, 'month');
+  const newItems = generateDaysInMonth(previousMonthDate);
+  items.value = [...newItems, ...items.value];
+  currentDate.value = previousMonthDate;
+};
+
 const selectDate = (date) => {
   selectedDate.value = date;
   console.log(selectedDate.value)
 };
+
 </script>
 
 <template>
-  <!-- <div class="month-year">
-    <p>{{ item.month }}</p>
-    <p>{{ item.year }}</p>
-  </div> -->
+  {{ currentDate }}
+  <div class="month-year">
+      <p>{{ currentMonthYear }}</p>
+    </div>
 
   <div class="calendar-container">
-    <InfiniteScroller class="cards" @infinite="loadItems">
+    <InfiniteScroller class="cards" @infinite="loadNextMonth">
       <Day
        v-for="(item, idx) in formattedItems"
        :day="item.date"
@@ -56,6 +68,7 @@ const selectDate = (date) => {
        :year="item.year"
        :key="idx"
        @click="selectDate(item)"
+       @scroll="loadPreviousMonth"
        />
     </InfiniteScroller>
     <p v-if="selectedDate">Selected Date: {{ selectedDate }}</p>
@@ -78,5 +91,8 @@ const selectDate = (date) => {
 .month-year {
   display: flex;
   flex-direction: row;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 800;
 }
 </style>
