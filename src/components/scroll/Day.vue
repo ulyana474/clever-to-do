@@ -5,29 +5,40 @@ defineProps({
   weekday: String,
   month: String,
   year: Number,
+  selected: Boolean
 });
+
 </script>
 
 <template>
-  <div class="day">
+  <button 
+    :class="{ 'day': true, 'selected': selected }" 
+    @click="$emit('select', { day, weekday, month, year })"
+  >
     <div class="content">
       <p class="weekday">{{ weekday }}</p>
       <p class="day-number">{{ day }}</p>
     </div>
-  </div>
+  </button>
 </template>
 
 <style scoped>
 .day {
-  height: 3rem;
-  width: 3rem;
-  padding: 2rem;
+  height: 5rem;
+  width: 8rem;
+  padding: 1rem;
   border-radius: 10px;
   color: white;
   background-color: indigo;
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
+}
+
+.selected {
+  background-color: navajowhite;
+  color: indigo;
 }
 
 .content {

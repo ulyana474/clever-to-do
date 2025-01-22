@@ -1,9 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-import { useAuthStore, useAlertStore } from '@/stores';
+import { useAuthStore } from '@/stores';
 import { Home } from '@/views';
 import accountRoutes from '@/router/account.routes';
-import usersRoutes from '@/router/users.routes';
 import calendarRoutes from '@/router/calendar.routes';
 
 const router = createRouter({
@@ -12,7 +11,6 @@ const router = createRouter({
     routes: [
         { path: '/', component: Home },
         { ...accountRoutes },
-        { ...usersRoutes },
         { ...calendarRoutes },
         // catch all redirect to home page
         { path: '/:pathMatch(.*)*', redirect: '/' }
@@ -20,10 +18,6 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to) => {
-    // clear alert on route change
-    const alertStore = useAlertStore();
-    alertStore.clear();
-
     // redirect to login page if not logged in and trying to access a restricted page 
     const publicPages = ['/account/login', '/account/register'];
     const authRequired = !publicPages.includes(to.path);
