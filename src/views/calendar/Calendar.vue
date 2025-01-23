@@ -4,6 +4,7 @@ import { ref, computed } from 'vue';
 import Day from '@/components/scroll/Day.vue';
 import InfiniteScroller from '@/components/scroll/InfiniteScrollWrapper.vue';
 import { useCalendarStore } from '@/stores/calendar-store';
+import TaskList from '@/components/taskList/TaskList.vue';
 
 const currentDate = ref(dayjs());
 let items = ref([]);
@@ -26,9 +27,15 @@ const currentMonthYear = computed(() => {
 })
 
 const generateDaysInMonth = () => {
-  const startOfMonth = currentDate.value.startOf('month');
+  let startDay = 0;
   const days = [];
-  for (let i = 0; i < currentDate.value.daysInMonth(); i++) {
+
+  if (items.value.length === 0) {
+    startDay = currentDate.value.date();
+  }
+
+  const startOfMonth = currentDate.value.startOf('month');
+  for (let i = startDay; i < currentDate.value.daysInMonth(); i++) {
     days.push(startOfMonth.add(i, 'day'));
   }
   return days;
@@ -60,12 +67,13 @@ const selectDate = (date) => {
         :year="item.year"
         :key="idx"
         :selected="useCalendar.selectedDate?.date === item.date && 
-                useCalendar.selectedDate?.month === item.month && 
-                useCalendar.selectedDate?.year === item.year"
+                   useCalendar.selectedDate?.month === item.month && 
+                   useCalendar.selectedDate?.year === item.year"
         @select="selectDate(item)"
       />
     </InfiniteScroller>
     <p v-if="useCalendar.selectedDate">Selected Date: {{ useCalendar.selectedDate }}</p>
+    <TaskList/>
   </div>
 </template>
 
@@ -88,12 +96,5 @@ const selectDate = (date) => {
   justify-content: center;
   font-size: 30px;
   font-weight: 800;
-}
-
-.selected-day {
-  background-color: #007bff;
-  color: white;
-  border-radius: 5px;
-  padding: 5px;
 }
 </style>
