@@ -1,6 +1,6 @@
 <script setup>
 import dayjs from 'dayjs';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import Day from '@/components/scroll/Day.vue';
 import InfiniteScroller from '@/components/scroll/InfiniteScrollWrapper.vue';
 import { useCalendarStore } from '@/stores/calendar-store';
@@ -13,6 +13,7 @@ const useCalendar = useCalendarStore();
 
 const formattedItems = computed(() => {
   return items.value.map((item) => {
+    console.log(item)
     return {
       date: item.date(),
       weekday: item.format('ddd'),
@@ -31,7 +32,7 @@ const generateDaysInMonth = () => {
   const days = [];
 
   if (items.value.length === 0) {
-    startDay = currentDate.value.date();
+    startDay = currentDate.value.date() - 1;
   }
 
   const startOfMonth = currentDate.value.startOf('month');
@@ -43,13 +44,24 @@ const generateDaysInMonth = () => {
 
 const loadNextMonth = () => {
   const newItems = generateDaysInMonth(currentDate.value);
+  console.log(newItems, items.value)
   items.value = [...items.value, ...newItems];
+  console.log(items.value)
   currentDate.value = currentDate.value.add(1, 'month');
 }
 
 const selectDate = (date) => {
   useCalendar.selectedDate = date;
 };
+
+onMounted(() => {
+  const firstDay = currentDate.value;
+  useCalendar.selectedDate = {
+    date: firstDay.date(),
+    month: firstDay.format('MMMM'),
+    year: firstDay.year()
+  };
+});
 </script>
 
 <template>
@@ -72,7 +84,6 @@ const selectDate = (date) => {
         @select="selectDate(item)"
       />
     </InfiniteScroller>
-    <p v-if="useCalendar.selectedDate">Selected Date: {{ useCalendar.selectedDate }}</p>
     <TaskList/>
   </div>
 </template>
