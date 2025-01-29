@@ -1,6 +1,31 @@
 <script setup>
-import { ref, onMounted, reactive, computed, watch } from 'vue';
+import { ref, onMounted, reactive, computed, watch, nextTick } from 'vue';
 import dayjs from 'dayjs';
+import Day from '@/components//scroll/Day.vue';
+import TaskList from '@/components/taskList/TaskList.vue';
+
+const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        console.log(entry)
+        if (entry.isIntersecting) {
+          const dayId = entry.target.getAttribute('data-day');
+          console.log(dayId)
+          if (dayId) {
+            if (!intersections[dayId]) {
+              intersections[dayId] = 0;
+            }
+            intersections[dayId]++;
+
+          }
+          if (dayId == lastDay.value) {
+            generateNext365Days();
+          }
+        }
+      });
+    },
+    { root: null, rootMargin: '0px', threshold: 0.1 }
+  );
 
 let scroller = ref(null);
 let days = ref([]);
@@ -10,6 +35,8 @@ const today = dayjs();
 const endOfYear = ref(today.endOf('year'));
 const totalDays = ref(endOfYear.value.diff(today, 'day') + 1);
 
+const selectedDay = ref(null);
+
 const daysGenerated = ref(
   Array.from({ length: totalDays.value }, (_, i) => 
   today.add(i, 'day').format('YYYY-MM-DD'))
@@ -17,13 +44,23 @@ const daysGenerated = ref(
 
 const lastDay = computed(() => daysGenerated.value.at(-1));
 
+const parsedDays = computed(() =>
+  daysGenerated.value.map((date) => ({
+    date,
+    day: dayjs(date).date(),
+    month: dayjs(date).format('MMMM'),
+    year: dayjs(date).year(),
+  }))
+);
+
 const generateNext365Days = () => {
   const lastDay = dayjs(daysGenerated.value[daysGenerated.value.length - 1]);
   const nextDays = Array.from({ length: 365 }, (_, i) => lastDay.add(i + 1, 'day').format('YYYY-MM-DD'));
   daysGenerated.value = [...daysGenerated.value, ...nextDays];
 };
 
-const generateInitialDays = () => {
+const generateInitialDays = async () => {
+  await nextTick();
   daysGenerated.value = Array.from(
     { length: totalDays.value },
     (_, i) => today.add(i, 'day').format('YYYY-MM-DD')
@@ -35,30 +72,21 @@ const updateObserver = () => {
   dayElements.forEach((el) => observer.observe(el));
 };
 
-const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        console.log(entry)
-        if (entry.isIntersecting) {
-          const dayId = entry.target.getAttribute('data-day');
-          if (dayId) {
-            if (!intersections[dayId]) {
-              intersections[dayId] = 0;
-            }
-            intersections[dayId]++;
-
-          }
-          if (dayId == lastDay.value) {
-            console.log('ksdxnksdnc')
-            generateNext365Days();
-          }
-        }
-      });
-    },
-    { root: null, rootMargin: '0px', threshold: 0.1 }
-  );
+const handleDaySelect = (day) => {
+  selectedDay.value = {
+    day: day.day,
+    month: day.month,
+    year: day.year
+  };
+};
 
 onMounted(() => {
+  selectedDay.value = {
+    day: today.date(),
+    month: today.format('MMMM'),
+    year: today.year()
+  }; 
+
   days.value = Array.from(scroller.value.querySelectorAll('.day'));
 
   generateInitialDays();
@@ -76,37 +104,39 @@ onMounted(() => {
 watch(days.value, (newDays) => {
   lastDay.value = newDays.at(-1);
 });
+
+watch(parsedDays, () => {
+  updateObserver();
+}, { deep: true });
 </script>
 
 <template>
   <div ref="scroller" class="scroller">
-    <div v-for="day in daysGenerated" :key="day" class="day" :data-day="day">
-      Day {{ day }}
-    </div>
+    <Day 
+      v-for="day in parsedDays"
+      :key="day"
+      :data-day="day.date"
+      :day="day.day"
+      :month="day.month"
+      :year="day.year"
+      :selected="selectedDay?.day === day?.day &&
+                 selectedDay?.month === day?.month &&
+                 selectedDay?.year === day?.year"
+      @select="handleDaySelect(day)"
+    />
   </div>
+  <TaskList/>
 </template>
 
 <style scoped>
 .scroller {
   height: 100%;
-  width: 100%;
+  width: 85%;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-}
-
-.scroller::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-
-.day {
-  height: 100px;
-  border: 1px solid #ccc;
-  margin-bottom: 10px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f9f9f9;
+  gap: 2%;
+  margin: 5% 7% 0 5%;
 }
 </style>
