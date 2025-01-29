@@ -1,111 +1,112 @@
 <script setup>
+import { ref, onMounted, reactive, computed, watch } from 'vue';
 import dayjs from 'dayjs';
-import { ref, computed, onMounted } from 'vue';
-import Day from '@/components/scroll/Day.vue';
-import InfiniteScroller from '@/components/scroll/InfiniteScrollWrapper.vue';
-import { useCalendarStore } from '@/stores/calendar-store';
-import TaskList from '@/components/taskList/TaskList.vue';
 
-const currentDate = ref(dayjs());
-let items = ref([]);
+let scroller = ref(null);
+let days = ref([]);
+const intersections = reactive({});
 
-const useCalendar = useCalendarStore();
+const today = dayjs();
+const endOfYear = ref(today.endOf('year'));
+const totalDays = ref(endOfYear.value.diff(today, 'day') + 1);
 
-const formattedItems = computed(() => {
-  return items.value.map((item) => {
-    console.log(item)
-    return {
-      date: item.date(),
-      weekday: item.format('ddd'),
-      month: item.format('MMMM'),
-      year: item.year(),
-    }
-  })
-})
+const daysGenerated = ref(
+  Array.from({ length: totalDays.value }, (_, i) => 
+  today.add(i, 'day').format('YYYY-MM-DD'))
+);
 
-const currentMonthYear = computed(() => {
-  return `${currentDate.value.subtract(1, 'month').format('MMMM')} ${currentDate.value.year()}`
-})
+const lastDay = computed(() => daysGenerated.value.at(-1));
 
-const generateDaysInMonth = () => {
-  let startDay = 0;
-  const days = [];
-
-  if (items.value.length === 0) {
-    startDay = currentDate.value.date() - 1;
-  }
-
-  const startOfMonth = currentDate.value.startOf('month');
-  for (let i = startDay; i < currentDate.value.daysInMonth(); i++) {
-    days.push(startOfMonth.add(i, 'day'));
-  }
-  return days;
-}
-
-const loadNextMonth = () => {
-  const newItems = generateDaysInMonth(currentDate.value);
-  console.log(newItems, items.value)
-  items.value = [...items.value, ...newItems];
-  console.log(items.value)
-  currentDate.value = currentDate.value.add(1, 'month');
-}
-
-const selectDate = (date) => {
-  useCalendar.selectedDate = date;
+const generateNext365Days = () => {
+  const lastDay = dayjs(daysGenerated.value[daysGenerated.value.length - 1]);
+  const nextDays = Array.from({ length: 365 }, (_, i) => lastDay.add(i + 1, 'day').format('YYYY-MM-DD'));
+  daysGenerated.value = [...daysGenerated.value, ...nextDays];
 };
 
+const generateInitialDays = () => {
+  daysGenerated.value = Array.from(
+    { length: totalDays.value },
+    (_, i) => today.add(i, 'day').format('YYYY-MM-DD')
+  );
+};
+
+const updateObserver = () => {
+  const dayElements = scroller.value.querySelectorAll('.day');
+  dayElements.forEach((el) => observer.observe(el));
+};
+
+const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        console.log(entry)
+        if (entry.isIntersecting) {
+          const dayId = entry.target.getAttribute('data-day');
+          if (dayId) {
+            if (!intersections[dayId]) {
+              intersections[dayId] = 0;
+            }
+            intersections[dayId]++;
+
+          }
+          if (dayId == lastDay.value) {
+            console.log('ksdxnksdnc')
+            generateNext365Days();
+          }
+        }
+      });
+    },
+    { root: null, rootMargin: '0px', threshold: 0.1 }
+  );
+
 onMounted(() => {
-  const firstDay = currentDate.value;
-  useCalendar.selectedDate = {
-    date: firstDay.date(),
-    month: firstDay.format('MMMM'),
-    year: firstDay.year()
-  };
+  days.value = Array.from(scroller.value.querySelectorAll('.day'));
+
+  generateInitialDays();
+  watch(
+    () => daysGenerated.value,
+    () => updateObserver(),
+    { flush: 'post' }
+  );
+
+  days.value.forEach((day) => {
+    observer.observe(day);
+  });
+});
+
+watch(days.value, (newDays) => {
+  lastDay.value = newDays.at(-1);
 });
 </script>
 
 <template>
-  <div class="month-year">
-    <p>{{ currentMonthYear }}</p>
-  </div>
-
-  <div class="calendar-container">
-    <InfiniteScroller class="cards" @infinite="loadNextMonth">
-      <Day
-        v-for="(item, idx) in formattedItems"
-        :day="item.date"
-        :weekday="item.weekday"
-        :month="item.month"
-        :year="item.year"
-        :key="idx"
-        :selected="useCalendar.selectedDate?.date === item.date && 
-                   useCalendar.selectedDate?.month === item.month && 
-                   useCalendar.selectedDate?.year === item.year"
-        @select="selectDate(item)"
-      />
-    </InfiniteScroller>
-    <TaskList/>
+  <div ref="scroller" class="scroller">
+    <div v-for="day in daysGenerated" :key="day" class="day" :data-day="day">
+      Day {{ day }}
+    </div>
   </div>
 </template>
 
 <style scoped>
-.calendar-container {
-  width: 600px;
-  margin-left: 25%;
+.scroller {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.cards {
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-  padding: 1rem;
+.scroller::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
-.month-year {
+.day {
+  height: 100px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
   display: flex;
-  flex-direction: row;
+  align-items: center;
   justify-content: center;
-  font-size: 30px;
-  font-weight: 800;
+  background-color: #f9f9f9;
 }
 </style>
