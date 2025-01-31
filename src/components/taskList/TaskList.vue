@@ -35,9 +35,12 @@ import {
   where,
   collection,
 } from 'firebase/firestore'
-import { useCalendarStore } from '@/stores'
+import { useAuthStore, useCalendarStore } from '@/stores'
 
 const useCalendar = useCalendarStore()
+const authStore = useAuthStore()
+
+const currUser = ref(authStore.user);
 
 const newTask = ref('')
 const tasks = ref([])
@@ -50,8 +53,7 @@ const fetchTasksForSelectedDate = async () => {
   if (!useCalendar.selectedDay) return
 
   const dateKey = getDateKey(useCalendar.selectedDay)
-  const q = query(tasksCollection, where('dateKey', '==', dateKey))
-
+  const q = query(tasksCollection, where('dateKey', '==', dateKey), where('userId', '==', currUser.value.uid))
   const querySnapshot = await getDocs(q)
   tasks.value = querySnapshot.docs.map((doc) => ({
     id: doc.id,
@@ -67,6 +69,7 @@ const addTask = async () => {
       completed: false,
       dateKey,
       createdAt: new Date(),
+      userId: currUser.value.uid
     }
 
     await addDoc(tasksCollection, newTaskDoc)

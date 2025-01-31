@@ -11,7 +11,7 @@ import {
 
 export const useAuthStore = defineStore('auth', () => {
 
-  const user = ref(JSON.parse(localStorage.getItem('user')));
+  const user = ref(null);
   const returnUrl = ref(null);
   const errorMessage = ref('')
 
@@ -48,11 +48,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function getCurrentUser() {
+  function initializeAuthState() {
     return new Promise((resolve, reject) => {
-      const unsubscribe = onAuthStateChanged(getAuth(), (user) => {
+      const unsubscribe = onAuthStateChanged(getAuth(), (firebaseUser) => {
           unsubscribe()
-          resolve(user)
+          resolve(firebaseUser)
+          user.value = firebaseUser
         },
         reject
       )
@@ -61,7 +62,6 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = () => {
     user.value = null;
-    localStorage.removeItem('user');
 
     router.push('/account/login');
   };
@@ -74,6 +74,6 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     logout,
-    getCurrentUser
+    initializeAuthState
   };
 });
