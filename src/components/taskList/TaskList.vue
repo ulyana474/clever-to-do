@@ -69,16 +69,30 @@ const tasksCollection = collection(db, 'tasks');
 const getDateKey = (date) => `${date.year}-${date.month}-${date.day}`
 
 const fetchTasksForSelectedDate = async () => {
-  if (!useCalendar.selectedDay) return
+  if (!useCalendar.selectedDay) return;
 
-  const dateKey = getDateKey(useCalendar.selectedDay)
-  const q = query(tasksCollection, where('dateKey', '==', dateKey), where('userId', '==', currUser.value.uid))
-  const querySnapshot = await getDocs(q)
-  tasks.value = querySnapshot.docs.map((doc) => ({
+  const dateKey = getDateKey(useCalendar.selectedDay);
+
+  const q = query(
+    tasksCollection,
+    where('dateKey', '==', dateKey),
+    where('userId', '==', currUser.value.uid)
+  );
+
+  const querySnapshot = await getDocs(q);
+  const newTasks = querySnapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
-  }))
-}
+  }));
+
+  const completedState = new Map(tasks.value.map(task => [task.id, task.completed]));
+
+  tasks.value = newTasks.map(task => ({
+    ...task,
+    completed: completedState.get(task.id) ?? task.completed
+  }));
+};
+
 
 const addTask = async () => {
   if (newTask.value.trim() !== '' && useCalendar.selectedDay) {
