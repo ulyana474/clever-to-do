@@ -1,15 +1,11 @@
 <template>
   <div id="app">
-    <div v-if="useCalendar.selectedDate">
+    <div v-if="useCalendar.selectedDay">
       <h2>
-        Tasks for {{ useCalendar.selectedDate.month }} {{ useCalendar.selectedDate.date }},
-        {{ useCalendar.selectedDate.year }}
+        Tasks for {{ useCalendar.selectedDay.month }} {{ useCalendar.selectedDay.day }},
+        {{ useCalendar.selectedDay.year }}
       </h2>
-      <input
-        v-model="newTask"
-        placeholder="Add a new task"
-        @keyup.enter="addTask"
-      />
+      <input v-model="newTask" placeholder="Add a new task" @keyup.enter="addTask" />
       <button @click="addTask">Add Task</button>
       <ul>
         <li v-for="task in tasks" :key="task.id">
@@ -27,10 +23,9 @@
   </div>
 </template>
 
-  
 <script setup>
-import { ref, onMounted } from 'vue';
-import db from '@/firebaseConfig';
+import { ref, onMounted, watch } from 'vue'
+import { db } from '@/firebaseConfig'
 import {
   addDoc,
   getDocs,
@@ -38,56 +33,64 @@ import {
   doc,
   query,
   where,
-} from 'firebase/firestore';
-import { useCalendarStore } from '@/stores';
+  collection,
+} from 'firebase/firestore'
+import { useCalendarStore } from '@/stores'
 
 const useCalendar = useCalendarStore()
 
-const newTask = ref('');
-const tasks = ref([]);
+const newTask = ref('')
+const tasks = ref([])
 
-// const tasksCollection = collection(db, 'tasks');
+const tasksCollection = collection(db, 'tasks');
 
-const tasksCollection = 'tasks'
-
-const getDateKey = (date) => `${date.year}-${date.month}-${date.date}`;
+const getDateKey = (date) => `${date.year}-${date.month}-${date.day}`
 
 const fetchTasksForSelectedDate = async () => {
-  if (!useCalendar.selectedDate) return;
+  if (!useCalendar.selectedDay) return
 
-  const dateKey = getDateKey(useCalendar.selectedDate);
-  const q = query(tasksCollection, where('dateKey', '==', dateKey));
+  const dateKey = getDateKey(useCalendar.selectedDay)
+  const q = query(tasksCollection, where('dateKey', '==', dateKey))
 
-  const querySnapshot = await getDocs(q);
+  const querySnapshot = await getDocs(q)
   tasks.value = querySnapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
-  }));
-};
+  }))
+}
 
 const addTask = async () => {
-  if (newTask.value.trim() !== '' && useCalendar.selectedDate) {
-    const dateKey = getDateKey(useCalendar.selectedDate);
+  if (newTask.value.trim() !== '' && useCalendar.selectedDay) {
+    const dateKey = getDateKey(useCalendar.selectedDay)
     const newTaskDoc = {
       text: newTask.value,
       completed: false,
       dateKey,
       createdAt: new Date(),
-    };
+    }
 
-    await addDoc(tasksCollection, newTaskDoc);
-    newTask.value = '';
-    await fetchTasksForSelectedDate();
+    await addDoc(tasksCollection, newTaskDoc)
+    newTask.value = ''
+    await fetchTasksForSelectedDate()
   }
-};
+}
 
 const removeTask = async (taskId) => {
-  const taskDoc = doc(db, 'tasks', taskId);
-  await deleteDoc(taskDoc);
+  const taskDoc = doc(db, 'tasks', taskId)
+  await deleteDoc(taskDoc)
   await fetchTasksForSelectedDate();
-};
+}
 
-onMounted(() => {
-  fetchTasksForSelectedDate();
-});
+onMounted(async () => {
+  if (useCalendar.selectedDay) {
+    await fetchTasksForSelectedDate();
+  }
+})
+
+watch(() => useCalendar.selectedDay, (newDay) => {
+  if (newDay) {
+    fetchTasksForSelectedDate()
+  }
+})
+
 </script>

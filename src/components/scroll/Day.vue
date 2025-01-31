@@ -1,6 +1,6 @@
 <script setup>
 const props = defineProps({
-  day: String,
+  day: Number,
   month: String,
   year: Number,
   selected: Boolean
@@ -14,19 +14,20 @@ const handleClick = () => {
 </script>
 
 <template>
-  {{ selected }}
-  <button 
-    :class="selected ? 'day selected' : 'day'" 
-    @click="handleClick"
-  >
-    <div class="content">
-      <p class="day-number">{{ day }}</p>
-      <div class="month-year">
-        <p>{{ month }}</p>
-        <p>{{ year }}</p>
+  <div>
+    <button 
+      :class="selected ? 'day selected' : 'day'" 
+      @click="handleClick"
+    >
+      <div class="content">
+        <p class="day-number">{{ day }}</p>
+        <div class="month-year">
+          <p>{{ month }}</p>
+          <p>{{ year }}</p>
+        </div>
       </div>
-    </div>
-  </button>
+    </button>
+  </div>
 </template>
 
 <style scoped>

@@ -1,16 +1,17 @@
 <script setup>
 import { ref, onMounted, reactive, computed, watch, nextTick } from 'vue';
+import { useCalendarStore } from '@/stores';
 import dayjs from 'dayjs';
 import Day from '@/components//scroll/Day.vue';
 import TaskList from '@/components/taskList/TaskList.vue';
 
+const calendarStore = useCalendarStore()
+
 const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        console.log(entry)
         if (entry.isIntersecting) {
           const dayId = entry.target.getAttribute('data-day');
-          console.log(dayId)
           if (dayId) {
             if (!intersections[dayId]) {
               intersections[dayId] = 0;
@@ -78,6 +79,7 @@ const handleDaySelect = (day) => {
     month: day.month,
     year: day.year
   };
+  calendarStore.selectedDay = selectedDay.value;
 };
 
 onMounted(() => {
@@ -86,6 +88,8 @@ onMounted(() => {
     month: today.format('MMMM'),
     year: today.year()
   }; 
+
+  calendarStore.selectedDay = selectedDay.value
 
   days.value = Array.from(scroller.value.querySelectorAll('.day'));
 
