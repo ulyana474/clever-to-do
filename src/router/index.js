@@ -1,20 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
 import { useAuthStore } from '@/stores';
-import { Home } from '@/views';
-import accountRoutes from '@/router/account.routes';
-import calendarRoutes from '@/router/calendar.routes';
+import routes from './routes';
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     linkActiveClass: 'active',
-    routes: [
-        { path: '/', component: Home },
-        { ...accountRoutes },
-        { ...calendarRoutes },
-        // catch all redirect to home page
-        { path: '/:pathMatch(.*)*', redirect: '/' }
-    ]
+    routes,
 });
 
 router.beforeEach(async (to) => {

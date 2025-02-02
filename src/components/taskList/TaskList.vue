@@ -42,7 +42,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { db } from '@/firebaseConfig'
+import { db } from '@/firebase.config'
 import {
   addDoc,
   getDocs,
