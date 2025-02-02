@@ -2,8 +2,7 @@
   <div id="app">
     <div v-if="useCalendar.selectedDay" class="content">
       <h2>
-        Tasks for {{ useCalendar.selectedDay.month }} {{ useCalendar.selectedDay.day }},
-        {{ useCalendar.selectedDay.year }}
+        Tasks for {{ useCalendar.selectedDay }}
       </h2>
       
       <div class="add-task-section">

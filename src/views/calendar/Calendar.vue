@@ -4,28 +4,9 @@ import { useCalendarStore } from '@/stores'
 import dayjs from 'dayjs'
 import Day from '@/components//scroll/Day.vue'
 import TaskList from '@/components/taskList/TaskList.vue'
+import { createDayIntersectionObserver } from '@/services/observer'
 
 const calendarStore = useCalendarStore()
-
-const observer = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        const dayId = entry.target.getAttribute('data-day')
-        if (dayId) {
-          if (!intersections[dayId]) {
-            intersections[dayId] = 0
-          }
-          intersections[dayId]++
-        }
-        if (dayId == lastDay.value) {
-          generateNext365Days()
-        }
-      }
-    })
-  },
-  { root: null, rootMargin: '0px', threshold: 0.1 },
-)
 
 let scroller = ref(null)
 let days = ref([])
@@ -60,6 +41,12 @@ const generateNext365Days = () => {
   daysGenerated.value = [...daysGenerated.value, ...nextDays]
 }
 
+const observer = createDayIntersectionObserver((dayId) => {
+  if (dayId == lastDay.value) {
+    generateNext365Days()
+  }
+}, intersections)
+
 const generateInitialDays = async () => {
   await nextTick()
   daysGenerated.value = Array.from({ length: totalDays.value }, (_, i) =>
@@ -73,21 +60,12 @@ const updateObserver = () => {
 }
 
 const handleDaySelect = (day) => {
-  selectedDay.value = {
-    day: day.day,
-    month: day.month,
-    year: day.year,
-  }
+  selectedDay.value = day.date
   calendarStore.selectedDay = selectedDay.value
 }
 
-onMounted(() => {
-  // init func
-  selectedDay.value = {
-    day: today.date(),
-    month: today.format('MMMM'),
-    year: today.year(),
-  }
+const initFunc = () => {
+  selectedDay.value = today.format().split('T')[0]
 
   calendarStore.selectedDay = selectedDay.value
 
@@ -98,6 +76,10 @@ onMounted(() => {
   days.value.forEach((day) => {
     observer.observe(day)
   })
+}
+
+onMounted(() => {
+  initFunc()
 })
 
 watch(
@@ -128,11 +110,7 @@ watch(
       :day="day.day"
       :month="day.month"
       :year="day.year"
-      :selected="
-        selectedDay?.day === day?.day &&
-        selectedDay?.month === day?.month &&
-        selectedDay?.year === day?.year
-      "
+      :selected="selectedDay === day.date"
       @select="handleDaySelect(day)"
     />
   </div>
